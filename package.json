@@ -1,0 +1,11 @@
+{
+  "name": "sprite-map-gen",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "dependencies": {
+    "fs-extra": "^3.0.1",
+    "gm": "^1.23.0",
+    "path": "^0.12.7"
+  }
+}
