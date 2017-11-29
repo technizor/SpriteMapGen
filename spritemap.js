@@ -12,6 +12,7 @@ module.exports = (sheets, cache = '.spritemap-cache/') => {
       const { x: basisX, y: basisY } = data.basis;
       const { x: gridX, y: gridY } = data.grid;
       const sprites = data.sprites;
+      const blocks = data.blocks;
       const tempPath = path.join(cache, data.output.path);
       console.log('Writing ' + tempPath);
       const ox = basisX * gridX;

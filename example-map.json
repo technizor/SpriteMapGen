@@ -7,10 +7,19 @@
     "path": "example-sprites.png"
   },
   "basis": { "x": 36, "y": 36 },
-  "grid": { "x": 3, "y": 2 },
+  "grid": { "x": 3, "y": 3 },
+  "blocks": [
+    {
+      "y": 2, "x": 0, "w": 3, "h": 1,
+      "bw": 1, "bh": 1,
+      "srcs": [
+        "a", "b", "c"
+      ]
+    }
+  ],
   "sprites": [
     { "y": 0, "x": 0, "src": "first" },
     { "y": 0, "x": 1, "w": 2, "h": 2, "src": "two-by-two" },
-    { "y": 1, "x": 0, "src": "second" },
+    { "y": 1, "x": 0, "src": "second" }
   ]
 }
