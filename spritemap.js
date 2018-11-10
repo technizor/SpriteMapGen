@@ -1,4 +1,5 @@
 const gm = require('gm');
+const sharp = require('sharp');
 const fse = require('fs-extra');
 const path = require('path');
 
@@ -41,35 +42,43 @@ module.exports = (sheets, cache = '.spritemap-cache/') => {
 
       const serialStitch = (array, buffer, position) => {
         if (position === array.length) {
-          gm(buffer)
-            .crop(ox, oy, bufferX, bufferY)
-            .write(tempPath, err => {
-              if (err) console.log('no write: '+ tempPath + `\n${err}`);
-            });
+          sharp(buffer)
+            .toFile(tempPath, fileOutCb);
         } else {
-
           const { gx, gy, gw, gh, px, py, pw, ph, imgSrc, srcPath, tmpPath } = getValues(array[position]);
 
           if (!fse.existsSync(srcPath)) {
             console.log('DNE:', srcPath, '->', tempPath);
             serialStitch(array, buffer, position + 1);
           } else {
-            gm(buffer)
-              .region(pw, ph, px + bufferX, py + bufferY)
-              .draw(`image Over ${0},${0} ${pw},${ph} ${srcPath}`)
-              .region(ox + bufferX, oy + bufferY, -px - bufferX, -py - bufferY) // required because gm draw bleeds one column to the right and the left-most pixel below
-              .toBuffer('PNG', (err, buf) => {
-                serialStitch(array, buf, position + 1); // TODO convert to actual iterative
+            sharp(srcPath)
+              .resize(pw, ph)
+              .toBuffer((err, data, info) => {
+                if (err) console.log(err);
+                sharp(buffer)
+                  .overlayWith(data, { left: px, top: py })
+                  .toBuffer(sharpCb(position + 1));
               });
           }
         }
       };
 
-      gm(ox + bufferX, oy + bufferY, "transparent")
-        .toBuffer('png', (err, buffer) => {
-          if (err) console.log(err);
-          serialStitch(sprites, buffer, 0);
-        });
+      const sharpCb = (nextIndex) => (err, data, info) => {
+        if (err) console.log(err);
+        serialStitch(sprites, data, nextIndex);
+      };
+      const fileOutCb = (err, info) => {
+        if (err) console.log('no write: ' + tempPath + `\n${err}`);
+      };
+      
+      const width = ox;
+      const height = oy;
+      const channels = 4;
+      const background = '#00000000';
+      const canvasOptions = { create: { width, height, channels, background } };
+      sharp(null, canvasOptions)
+        .toFormat(inputExt)
+        .toBuffer(sharpCb(0));
     })));
 
 }
