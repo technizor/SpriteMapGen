@@ -189,7 +189,7 @@ class ObjectValidator extends Validator {
     prop(propName, propValidator = new Validator()) { return new this.constructor(this._optional, this._type, [...this._steps, specFactory.prop(propName, propValidator)]); }
 }
 
-class ArrayValidator extends Validator {
+class ArrayValidator extends ObjectValidator {
     constructor(optional, type, steps) {
         super(optional, type, steps);
     }
