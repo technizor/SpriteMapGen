@@ -32,6 +32,9 @@ const specFactory = {
     count: (countValidator, entryValidator) => new EntrySpec('count', 
         value => (typeof value === 'object' && value.constructor === Array) && countValidator.test(value.filter(entryValidator.test)),
         entryValidator, countValidator),
+    // Custom Validation
+    validate: (validationName, validationFunction) => new ValueSpec(`validate<${validationName}>`,
+        value => validationFunction(value)),
 };
 const vf = {
     printTree: (str) => str.split('\n')
@@ -130,6 +133,7 @@ class Validator {
 
     required() { return new this.constructor(false, this._type, this._steps); }
     optional() { return new this.constructor(true, this._type, this._steps); }
+    validate(validationName, validationFunction) { return new this.constructor(this._optional, this._type, [...this._steps, specFactory.validate(validationName, validationFunction)]); }
 
     test(value) {
         if (arguments.length > 1) return Array.prototype.slice.call(arguments).map(vf.test(this._optional, this._steps));
