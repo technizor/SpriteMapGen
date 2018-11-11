@@ -38,7 +38,7 @@ const vf = {
         .map(line => `  ${line}`)
         .join('\n'),
     test: (optional, steps) => (value) => {
-        if (value === undefined) return false;
+        if (value === undefined) return optional;
         if (value === null) return optional;
         return steps.every(spec => spec.test(value));
     },
