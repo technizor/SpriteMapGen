@@ -9,7 +9,8 @@
     "path": "^0.12.7",
     "sharp": "^0.21.0"
   },
+  "main": "lib/index.js",
   "bin": {
-    "smg": "./main.js"
+    "smg": "lib/index.js"
   }
 }
