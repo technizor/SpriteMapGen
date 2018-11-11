@@ -1,25 +1,45 @@
 {
   "input": {
     "path": "sprites/",
-    "format": "asd"
+    "format": "png"
   },
   "output": {
-    "path": "example-sprites.png"
+    "path": "example",
+    "format": "png"
   },
-  "basis": { "x": 36, "y": 36 },
-  "grid": { "x": 3, "y": 3 },
+  "grid": {
+    "basisX": 36,
+    "basisY": 36,
+    "sizeX": 3,
+    "sizeY": 3
+  },
   "blocks": [
     {
-      "y": 2, "x": 0, "w": 3, "h": 1,
-      "bw": 1, "bh": 1,
-      "srcs": [
+      "x": 0, "y": 0,
+      "src": "first"
+    },
+    {
+      "x": 1,
+      "y": 0,
+      "sizeX": 2,
+      "sizeY": 2,
+      "src": "two-by-two"
+    },
+    {
+      "x": 0,
+      "y": 1,
+      "src": "second"
+    },
+    {
+      "x": 0,
+      "y": 2,
+      "sizeX": 3,
+      "sizeY": 1,
+      "blockX": 1,
+      "blockY": 1,
+      "blockSrc": [
         "a", "b", "c"
       ]
     }
-  ],
-  "sprites": [
-    { "y": 0, "x": 0, "src": "first" },
-    { "y": 0, "x": 1, "w": 2, "h": 2, "src": "two-by-two" },
-    { "y": 1, "x": 0, "src": "second" }
   ]
 }
