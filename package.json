@@ -1,13 +1,19 @@
 {
   "name": "sprite-map-gen",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "A CLI tool used to stitch multiple images into a single spritemap image.",
+  "author": {
+    "name": "Sherman Ying",
+    "email": "fishermanying@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/technizor/SpriteMapGen.git"
+  },
+  "license": "MIT",
   "dependencies": {
-    "fs-extra": "^3.0.1",
-    "gm": "^1.23.0",
-    "path": "^0.12.7",
-    "sharp": "^0.21.0"
+    "fs-extra": "7.0.1",
+    "sharp": "0.21.0"
   },
   "main": "lib/index.js",
   "bin": {
