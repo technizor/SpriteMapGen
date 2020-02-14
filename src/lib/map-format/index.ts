@@ -1,15 +1,19 @@
-const Validator = new require('./validator');
+import ValidatorFactory from '../validator';
+import { OptionsValue, IOValue, GridValue, BlockEntry, BlockBlockEntry, BaseBlockEntry } from './types';
+import { ValidateFunc } from '../validator/types';
+import { Obj } from '../validator/spec';
 
 const primitiveValidators = {
-    string: Validator.string(),
-    dimension: Validator.number()
+    string: ValidatorFactory.string(),
+    dimension: ValidatorFactory.number()
         .finite().integer().gt(0),
-    position: Validator.number()
+    position: ValidatorFactory.number()
         .finite().integer().gteq(0),
-    format: Validator.string()
+    format: ValidatorFactory.string()
         .enum('png', 'jpeg', 'webp', 'tiff', 'raw', 'tile'),
 };
-const blockValidatorBase = Validator.object()
+
+const blockValidatorBase = ValidatorFactory.object<BaseBlockEntry>()
     .prop('sizeX', primitiveValidators.dimension.optional(1))
     .prop('sizeY', primitiveValidators.dimension.optional(1))
     .prop('x', primitiveValidators.position)
@@ -20,36 +24,34 @@ const blockValidators = {
     sprite: blockValidatorBase
         .prop('src', primitiveValidators.string),
     block: blockValidatorBase
-        .prop('blockSrc', Validator.array().every(primitiveValidators.string))
+        .prop('blockSrc', ValidatorFactory.array<string>().every(primitiveValidators.string))
         .prop('blockX', primitiveValidators.dimension.optional(1))
         .prop('blockY', primitiveValidators.dimension.optional(1))
         .prop('blockDir', primitiveValidators.string.enum('row', 'col').optional('row')),
 }
+
 const fieldValidators = {
-    input: Validator.object()
+    input: ValidatorFactory.object<IOValue>()
         .prop('path', primitiveValidators.string)
         .prop('format', primitiveValidators.format.optional('png')),
-    output: Validator.object()
+    output: ValidatorFactory.object<IOValue>()
         .prop('path', primitiveValidators.string)
         .prop('format', primitiveValidators.format.optional('png')),
-    grid: Validator.object()
+    grid: ValidatorFactory.object<GridValue>()
         .prop('basisX', primitiveValidators.dimension)
         .prop('basisY', primitiveValidators.dimension)
         .prop('sizeX', primitiveValidators.dimension)
         .prop('sizeY', primitiveValidators.dimension),
-    blocks: Validator.array()
-        .every(Validator.object()
+    blocks: ValidatorFactory.array<BlockEntry>()
+        .every(ValidatorFactory.object<BlockEntry>()
             .case(blockValidators.map, blockValidators.sprite, blockValidators.block)),
 };
 
-const base64Table = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-const debugGridStr = grid => grid
-    .map(row => row
-        .map(b => (b !== undefined && b !== null) ? base64Table.charAt(b % base64Table.length) : ' ')
-        .join(''))
-    .join('\n');
+const validateGridConstraints: ValidateFunc<Obj<OptionsValue>> = (value) => {
+    const malformedRes = { valid: false, reason: { message: 'grid is malformed' } };
+    const successRes = { valid: true, reason: { message: 'grid is okay' } };
 
-const validateGridConstraints = (value) => {
+    // todo: make a better coordinate-based check instead of cell-based
     let grid = value.grid;
     let cells = new Array(grid.sizeY);
     for (let y = 0; y < grid.sizeY; y++) {
@@ -64,37 +66,38 @@ const validateGridConstraints = (value) => {
         let y1 = block.y;
         let x2 = x1 + xs;
         let y2 = y1 + ys;
-        if (x1 < 0 || x2 < 0 || x1 >= grid.sizeX || x2 > grid.sizeX) return false;
-        if (y1 < 0 || y2 < 0 || y1 >= grid.sizeY || y2 > grid.sizeY) return false;
+        if (x1 < 0 || x2 < 0 || x1 >= grid.sizeX || x2 > grid.sizeX) return malformedRes;
+        if (y1 < 0 || y2 < 0 || y1 >= grid.sizeY || y2 > grid.sizeY) return malformedRes;
 
         for (let y = y1; y < y2; y++) {
             for (let x = x1; x < x2; x++) {
-                if (cells[y][x] !== undefined && cells[y][x] !== null) return false;
+                if (cells[y][x] !== undefined && cells[y][x] !== null) return malformedRes;
                 cells[y][x] = b;
             }
         }
 
         // Block layout check
-        if (block.blockSrc !== null && block.blockSrc !== undefined) {
-            let count = block.blockSrc.length;
-            let xb = block.blockX || 1;
-            let yb = block.blockY || 1;
+        if ((block as BlockBlockEntry).blockSrc) {
+            let blk = block as BlockBlockEntry;
+            let count = blk.blockSrc.length;
+            let xb = blk.blockX || 1;
+            let yb = blk.blockY || 1;
             let xn = xs / xb;
             let yn = ys / yb;
-            if (!Number.isInteger(xn)) return false;
-            if (!Number.isInteger(yn)) return false;
-            if (xn * yn > count) return false;
+            if (!Number.isInteger(xn)) return malformedRes;
+            if (!Number.isInteger(yn)) return malformedRes;
+            if (xn * yn > count) return malformedRes;
         }
     }
     //console.log(debugGridStr(cells));
-    return true;
+    return successRes;
 };
 
-const optionsValidator = Validator.object()
+const optionsValidator = ValidatorFactory.object<OptionsValue>()
     .prop('input', fieldValidators.input)
     .prop('output', fieldValidators.output)
     .prop('grid', fieldValidators.grid)
     .prop('blocks', fieldValidators.blocks)
     .validate('gridConstraints', validateGridConstraints);
 
-module.exports = optionsValidator;
+export default optionsValidator;

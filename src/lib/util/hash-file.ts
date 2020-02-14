@@ -1,10 +1,10 @@
-const crypto = require('crypto');
-const fs = require('fs');
+import * as crypto from 'crypto';
+import * as fs from 'fs';
 
-function hashFile(file) {
+function hashFile(file: string) {
     return new Promise((resolve, reject) => {
         let hash = crypto.createHash('sha256');
-        let fileStream = fs.ReadStream(file);
+        let fileStream = new fs.ReadStream(file as any);
         fileStream.on('data', data => {
             hash.update(data);
         });
@@ -15,4 +15,4 @@ function hashFile(file) {
     });
 }
 
-module.exports = hashFile;
+export default hashFile;

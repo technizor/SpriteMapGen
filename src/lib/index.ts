@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-const procedure = require('./procedure');
+import procedure from './procedure';
 
-let executable = process.argv[0];
-let entry = process.argv[1];
+//let executable = process.argv[0];
+//let entry = process.argv[1];
 let command = process.argv[2];
 let maps = process.argv.splice(3);
 let procedureData = { maps };

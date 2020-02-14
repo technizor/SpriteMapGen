@@ -12,11 +12,17 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@types/fs-extra": "^8.0.1",
+    "@types/sharp": "^0.21.0",
     "fs-extra": "7.0.1",
     "sharp": "0.21.0"
   },
-  "main": "lib/index.js",
+  "scripts": {
+    "prepublish": "tsc"
+  },
+  "main": "dist/lib/index.js",
+  "types": "dist/lib/index.d.ts",
   "bin": {
-    "smg": "lib/index.js"
+    "smg": "dist/lib/index.js"
   }
 }

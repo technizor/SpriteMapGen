@@ -85,3 +85,4 @@ $RECYCLE.BIN/
 *.lnk
 
 .spritemap-cache
+dist

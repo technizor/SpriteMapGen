@@ -1,9 +1,13 @@
-const fse = require('fs-extra');
-const path = require('path');
-const Processor = require('./processor');
+import * as fse from 'fs-extra';
+import BaseProcessor, {Processor} from './processor';
+import mapFormat from './map-format';
 
 class StepResult {
-    constructor(success, processors, cache) {
+    public _success: any;
+    public _processors: any;
+    public _cache: any;
+
+    constructor(success: any, processors: any, cache: any) {
         this._success = success;
         this._processors = processors;
         this._cache = cache;
@@ -13,14 +17,14 @@ class StepResult {
 async function loadStep({ maps = [], cache = '.spritemap-cache' } = {}) {
     await fse.ensureDir(cache);
 
-    let processors = maps.map(s => new Processor(s, cache));
+    let processors: Array<Processor> = maps.map(s => new BaseProcessor(s, cache, []));
     for (let i = 0; i < processors.length; i++) {
-        processors[i] = await processors[i].loadOptions();
+        processors[i] = await (processors[i] as BaseProcessor).loadOptions();
     }
     return new StepResult(true, processors, cache);
 }
 
-async function validateStep (processors, cache) {
+async function validateStep(processors: any, cache: any) {
     let nextProcessors = new Array(processors.length);
     for (let i = 0; i < processors.length; i++) {
         nextProcessors[i] = await processors[i].validate();
@@ -39,7 +43,7 @@ async function validateStep (processors, cache) {
     return new StepResult(true, nextProcessors, cache);
 }
 
-async function generateStep(processors, cache) {
+async function generateStep(processors: any, cache: any) {
     try {
         for (let i = 0; i < processors.length; i++) {
             await processors[i].generate();
@@ -54,8 +58,8 @@ async function generateStep(processors, cache) {
     return new StepResult(true, processors, cache);
 }
 
-module.exports = {
-    generate: async (options) => {
+export default {
+    generate: async (options: any) => {
         let loadResult = await loadStep(options);
         if (!loadResult._success) {
             return false;
@@ -73,7 +77,7 @@ module.exports = {
 
         return true;
     },
-    test: async (options) => {
+    test: async (options: any) => {
         let loadResult = await loadStep(options);
         if (!loadResult._success) {
             return false;
