@@ -59,6 +59,8 @@ async function generateStep(processors: any, cache: any) {
 }
 
 export default {
+    mapFormat,
+    
     generate: async (options: any) => {
         let loadResult = await loadStep(options);
         if (!loadResult._success) {

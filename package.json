@@ -20,8 +20,8 @@
   "scripts": {
     "prepublish": "tsc"
   },
-  "main": "dist/lib/index.js",
-  "types": "dist/lib/index.d.ts",
+  "main": "dist/lib/procedure.js",
+  "types": "dist/lib/procedure.d.ts",
   "bin": {
     "smg": "dist/lib/index.js"
   }
