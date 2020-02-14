@@ -1,6 +1,6 @@
 {
   "name": "sprite-map-gen",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A CLI tool used to stitch multiple images into a single spritemap image.",
   "author": {
     "name": "Sherman Ying",
