@@ -1,6 +1,5 @@
 import { ValidationResult, IValidator, ValidateFunc, ValidationResultReason } from './types';
-import { Spec, PropSpec, EnumSpec, CaseSpec, CustomSpec, EntrySpec, Obj } from './spec';
-import specFactory from './spec-factory';
+import specFactory, { Spec, Obj } from './spec';
 
 const indent = (str: string) => str.split('\n')
     .map(line => `  ${line}`)
@@ -16,7 +15,7 @@ const tester = (optional: boolean, steps: Array<Spec<any>>) => (value: any) => {
     if (value === null) return new ValidationResult(optional, { message: 'required value was null' });
     let standardSpecs = steps.filter(spec => spec.type === 'value' || spec.type === 'enum' || spec.type === 'prop' || spec.type === 'entry' || spec.type === 'case');
     let customSpecs = steps.filter(spec => spec.type === 'custom');
-    
+
     let specToTestMapper = (spec: Spec<any>): SpecResult => {
         try {
             return { spec, result: spec.test(value) };
@@ -37,7 +36,7 @@ const tester = (optional: boolean, steps: Array<Spec<any>>) => (value: any) => {
 
     let customTest = customSpecs.map(specToTestMapper);
     let customTestFails = customTest.filter(testFailFilter);
-    
+
     let overallTestFails = [...standardTestFails, ...customTestFails];
     if (overallTestFails.length > 0) {
         let reason = Object.assign({}, ...overallTestFails.map(testToReasonMapper));
@@ -46,15 +45,16 @@ const tester = (optional: boolean, steps: Array<Spec<any>>) => (value: any) => {
     return new ValidationResult(true, { message: 'validation succeeded' });
 };
 
-interface ValidatorOptions<T> {
+export interface ValidatorOptions<T> {
     optional?: boolean;
-    defaultValue?: any;
+    defaultValue?: T;
     type?: string;
     steps?: Array<Spec<T>>;
 }
-class Validator<T> implements IValidator<T> {
+
+export class Validator<T> implements IValidator<T> {
     protected _optional: boolean;
-    protected _defaultValue: any;
+    protected _defaultValue: T | undefined;
     protected _type: string;
     protected _steps: Array<Spec<T>>;
     constructor({ optional = false, defaultValue = undefined, type = 'undefined', steps = [] }: ValidatorOptions<T> = {}) {
@@ -65,12 +65,14 @@ class Validator<T> implements IValidator<T> {
     }
 
     getType() { return this._type; }
+    getOptional() { return this._optional; }
+    getDefault() { return this._defaultValue; }
 
     eq<S extends Validator<T>>(this: S, x: T): S {
         return new (Object.getPrototypeOf(this).constructor)({
-            optional: this._optional, 
-            defaultValue: this._defaultValue, 
-            type: this._type, 
+            optional: this._optional,
+            defaultValue: this._defaultValue,
+            type: this._type,
             steps: [...this._steps, specFactory.eq(x)],
         });
     }
@@ -85,8 +87,8 @@ class Validator<T> implements IValidator<T> {
 
     enum<S extends Validator<T>>(this: S, ...vals: T[]): S {
         return new (Object.getPrototypeOf(this).constructor)({
-            optional: this._optional, 
-            defaultValue: this._defaultValue, 
+            optional: this._optional,
+            defaultValue: this._defaultValue,
             type: this._type,
             steps: [...this._steps, specFactory.enum(vals)],
         });
@@ -99,19 +101,11 @@ class Validator<T> implements IValidator<T> {
             steps: [...this._steps, specFactory.nenum(vals)],
         });
     }
-    getEnum(n = 0) {
-        let spec = this._steps.filter(spec => spec.type === 'enum' && spec.name === 'enum')[n];
-        return spec && (spec as EnumSpec<T>).vals;
-    }
-    getNenum(n = 0) {
-        let spec = this._steps.filter(spec => spec.type === 'enum' && spec.name === 'nenum')[n];
-        return spec && (spec as EnumSpec<T>).vals;
-    }
 
     case<S extends Validator<T>>(this: S, ...vals: IValidator<T>[]): S {
         return new (Object.getPrototypeOf(this).constructor)({
-            optional: this._optional, 
-            defaultValue: this._defaultValue, 
+            optional: this._optional,
+            defaultValue: this._defaultValue,
             type: this._type,
             steps: [...this._steps, specFactory.case(vals)],
         });
@@ -123,15 +117,6 @@ class Validator<T> implements IValidator<T> {
             type: this._type,
             steps: [...this._steps, specFactory.ncase(vals)],
         });
-    }
-    
-    getCase(n = 0) {
-        let spec = this._steps.filter(spec => spec.type === 'case' && spec.name === 'case')[n];
-        return spec && (spec as CaseSpec<T>).caseValidators;
-    }
-    getNcase(n = 0) {
-        let spec = this._steps.filter(spec => spec.type === 'case' && spec.name === 'ncase')[n];
-        return spec && (spec as CaseSpec<T>).caseValidators;
     }
 
     required<S extends Validator<T>>(this: S): S {
@@ -150,12 +135,6 @@ class Validator<T> implements IValidator<T> {
             steps: this._steps,
         });
     }
-    getOptional() {
-        return this._optional;
-    }
-    getDefault() {
-        return this._defaultValue;
-    }
 
     validate<S extends Validator<T>>(this: S, validatorName: string, validatorFunc: ValidateFunc<T>): S {
         return new (Object.getPrototypeOf(this).constructor)({
@@ -164,10 +143,6 @@ class Validator<T> implements IValidator<T> {
             type: this._type,
             steps: [...this._steps, specFactory.validate(validatorName, validatorFunc)],
         });
-    }
-    getValidate(n = 0) {
-        let spec = this._steps.filter(spec => spec.type === 'custom')[n];
-        return spec && (spec as CustomSpec<T>).validatorFunc;
     }
 
     test(value: T) {
@@ -187,118 +162,99 @@ class Validator<T> implements IValidator<T> {
     }
 }
 
-class PrimitiveValidator<T> extends Validator<T> {
-    constructor(options?: ValidatorOptions<T>) {
-        super(options);
-    }
+export class PrimitiveValidator<T> extends Validator<T> {
+    constructor(options?: ValidatorOptions<T>) { super(options); }
 
     lt<S extends PrimitiveValidator<T>>(this: S, x: T): S {
         return new (Object.getPrototypeOf(this).constructor)({
-            optional: this._optional, 
-            defaultValue: this._defaultValue, 
-            type: this._type, 
+            optional: this._optional,
+            defaultValue: this._defaultValue,
+            type: this._type,
             steps: [...this._steps, specFactory.lt(x)],
-        }); 
+        });
     }
     lteq<S extends PrimitiveValidator<T>>(this: S, x: T): S {
         return new (Object.getPrototypeOf(this).constructor)({
-            optional: this._optional, 
-            defaultValue: this._defaultValue, 
-            type: this._type, 
+            optional: this._optional,
+            defaultValue: this._defaultValue,
+            type: this._type,
             steps: [...this._steps, specFactory.lteq(x)],
-        }); 
+        });
     }
     gt<S extends PrimitiveValidator<T>>(this: S, x: T): S {
         return new (Object.getPrototypeOf(this).constructor)({
-            optional: this._optional, 
-            defaultValue: this._defaultValue, 
-            type: this._type, 
+            optional: this._optional,
+            defaultValue: this._defaultValue,
+            type: this._type,
             steps: [...this._steps, specFactory.gt(x)],
-        }); 
+        });
     }
     gteq<S extends PrimitiveValidator<T>>(this: S, x: T): S {
         return new (Object.getPrototypeOf(this).constructor)({
-            optional: this._optional, 
-            defaultValue: this._defaultValue, 
-            type: this._type, 
+            optional: this._optional,
+            defaultValue: this._defaultValue,
+            type: this._type,
             steps: [...this._steps, specFactory.gteq(x)],
-        }); 
+        });
     }
 }
 
-class NumberValidator extends PrimitiveValidator<number> {
-    constructor(options?: ValidatorOptions<number>) {
-        super(options);
-    }
+export class NumberValidator extends PrimitiveValidator<number> {
+    constructor(options?: ValidatorOptions<number>) { super(options); }
 
     integer<S extends NumberValidator>(this: S): S {
         return new (Object.getPrototypeOf(this).constructor)({
-            optional: this._optional, 
-            defaultValue: this._defaultValue, 
-            type: this._type, 
+            optional: this._optional,
+            defaultValue: this._defaultValue,
+            type: this._type,
             steps: [...this._steps, specFactory.integer()],
-        }); 
+        });
     }
     finite<S extends NumberValidator>(this: S): S {
         return new (Object.getPrototypeOf(this).constructor)({
-            optional: this._optional, 
-            defaultValue: this._defaultValue, 
-            type: this._type, 
+            optional: this._optional,
+            defaultValue: this._defaultValue,
+            type: this._type,
             steps: [...this._steps, specFactory.finite()],
-        }); 
+        });
     }
     nan<S extends NumberValidator>(this: S): S {
         return new (Object.getPrototypeOf(this).constructor)({
-            optional: this._optional, 
-            defaultValue: this._defaultValue, 
-            type: this._type, 
+            optional: this._optional,
+            defaultValue: this._defaultValue,
+            type: this._type,
             steps: [...this._steps, specFactory.nan()],
-        }); 
+        });
     }
 }
 
-class ObjectValidator<T extends Obj<T>> extends Validator<T> {
-    constructor(options?: ValidatorOptions<T>) {
-        super(options);
-    }
+export class ObjectValidator<T extends Obj<T>> extends Validator<T> {
+    constructor(options?: ValidatorOptions<T>) { super(options); }
 
     prop<S extends ObjectValidator<T>, U>(this: S, propName: string, propValidator: Validator<U>): S {
         return new (Object.getPrototypeOf(this).constructor)({
-            optional: this._optional, 
-            defaultValue: this._defaultValue, 
-            type: this._type, 
+            optional: this._optional,
+            defaultValue: this._defaultValue,
+            type: this._type,
             steps: [...this._steps, specFactory.prop(propName, propValidator)],
-        }); 
-    }
-
-    getProp<U>(propName: string, n = 0) {
-        // todo: determine how to coerce type generic for object with property of computed name
-        let spec = this._steps.filter(spec => spec.type === 'prop' && spec.name === `[${propName}]`)[n];
-        return spec && (spec as PropSpec<T, U>).propValidator;
+        });
     }
 }
 
-class ArrayValidator<T> extends Validator<Array<T>> {
-    constructor(options?: ValidatorOptions<Array<T>>) {
-        super(options);
-    }
+export class ArrayValidator<T> extends Validator<Array<T>> {
+    constructor(options?: ValidatorOptions<Array<T>>) { super(options); }
 
     every<S extends ArrayValidator<T>>(this: S, entryValidator: Validator<T>): S {
         return new (Object.getPrototypeOf(this).constructor)({
-            optional: this._optional, 
-            defaultValue: this._defaultValue, 
-            type: this._type, 
+            optional: this._optional,
+            defaultValue: this._defaultValue,
+            type: this._type,
             steps: this._steps.concat([specFactory.every(entryValidator)]),
-        }); 
-    }
-
-    getEvery(n = 0) {
-        let spec = this._steps.filter(spec => spec.type === 'entry')[n];
-        return spec && (spec as EntrySpec<T>).entryValidator;
+        });
     }
 }
 
-const ValidatorFactory = {
+export default {
     object: <T>() => {
         return new ObjectValidator<T>({
             optional: false,
@@ -347,10 +303,4 @@ const ValidatorFactory = {
             steps: [specFactory.array<T>()],
         });
     },
-}
-
-export default ValidatorFactory;
-
-export {
-    Validator, PrimitiveValidator, NumberValidator, ArrayValidator, ObjectValidator
 }
