@@ -1,92 +1,98 @@
 import * as fse from 'fs-extra';
-import BaseProcessor, {Processor} from './processor';
+import BaseProcessor, {Processor, ResolvedProcessor, ValidatedProcessor} from './processor';
 import mapFormat from './map-format';
 
-class StepResult {
-    public _success: any;
-    public _processors: any;
-    public _cache: any;
+class StepResult<T extends Processor<T>> {
+    private _success: boolean;
+    private _processors: Array<T>;
+    private _cachePath: string;
 
-    constructor(success: any, processors: any, cache: any) {
+    constructor(success: boolean, processors: Array<T>, cachePath: string) {
         this._success = success;
         this._processors = processors;
-        this._cache = cache;
+        this._cachePath = cachePath;
     }
+
+    isSuccess() { return this._success; }
+    getProcessors() { return this._processors; }
+    getCachePath() { return this._cachePath; }
 }
 
-async function loadStep({ maps = [], cache = '.spritemap-cache' } = {}) {
-    await fse.ensureDir(cache);
-
-    let processors: Array<Processor> = maps.map(s => new BaseProcessor(s, cache, []));
-    for (let i = 0; i < processors.length; i++) {
-        processors[i] = await (processors[i] as BaseProcessor).loadOptions();
-    }
-    return new StepResult(true, processors, cache);
+interface LoadArguments {
+    mapPaths?: Array<string>,
+    cachePath?: string,
 }
 
-async function validateStep(processors: any, cache: any) {
-    let nextProcessors = new Array(processors.length);
-    for (let i = 0; i < processors.length; i++) {
-        nextProcessors[i] = await processors[i].validate();
-    }
-    if (nextProcessors.findIndex(p => !p.isOptionsValid()) != -1) {
+async function loadStep(opts: LoadArguments = {}) {
+    let mapPaths = opts.mapPaths || [];
+    let cachePath = opts.cachePath || '.spritemap-cache';
+
+    await fse.ensureDir(cachePath);
+
+    let processors = await Promise.all(mapPaths
+        .map(s => new BaseProcessor(s, cachePath, []))
+        .map(bp => bp.loadOptions()));
+    return new StepResult(true, processors, cachePath);
+}
+
+async function validateStep(processors: Array<ResolvedProcessor>, cachePath: string) {
+    let validatedProcessors = await Promise.all(processors.map(p => p.validate()))
+
+    if (validatedProcessors.findIndex(p => !p.isOptionsValid()) !== -1) {
         console.log(mapFormat.spec('[options]'));
-        return new StepResult(false, nextProcessors, cache);
+        return new StepResult(false, validatedProcessors, cachePath);
     }
     console.log('All maps are valid.');
 
-    if (nextProcessors.findIndex(p => !p.isFilesValid()) != -1) {
+    if (validatedProcessors.findIndex(p => !p.isFilesValid()) !== -1) {
         console.log('Files are missing.');
-        return new StepResult(false, nextProcessors, cache);
+        return new StepResult(false, validatedProcessors, cachePath);
     }
     console.log('All files are valid.');
-    return new StepResult(true, nextProcessors, cache);
+    return new StepResult(true, validatedProcessors, cachePath);
 }
 
-async function generateStep(processors: any, cache: any) {
-    try {
-        for (let i = 0; i < processors.length; i++) {
-            await processors[i].generate();
-            console.log(`${processors[i]._map} -> ${processors[i]._options.output.path}.${processors[i]._options.output.format}`);
-        }
-    } catch (err) {
-        console.error(err);
-        return new StepResult(false, processors, cache);
-    }
-    console.log('All files generated.');
+async function generateStep(processors: Array<ValidatedProcessor>, cachePath: string) {
+    return await Promise.all(processors.map(p => `${p.getMapPath()} -> ${p.generate()}`))
+    .then(() => {
+        console.log('All files generated.');
 
-    return new StepResult(true, processors, cache);
+        return new StepResult(true, processors, cachePath);
+    }).catch((err: any) => {
+        console.error(err);
+        return new StepResult(false, processors, cachePath);
+    });
 }
 
 export default {
     mapFormat,
     
-    generate: async (options: any) => {
+    generate: async (options: LoadArguments) => {
         let loadResult = await loadStep(options);
-        if (!loadResult._success) {
+        if (!loadResult.isSuccess()) {
             return false;
         }
 
-        let validateResult = await validateStep(loadResult._processors, loadResult._cache);
-        if (!validateResult._success) {
+        let validateResult = await validateStep(loadResult.getProcessors(), loadResult.getCachePath());
+        if (!validateResult.isSuccess()) {
             return false;
         }
 
-        let generateResult = await generateStep(validateResult._processors, validateResult._cache);
-        if (!generateResult._success) {
+        let generateResult = await generateStep(validateResult.getProcessors(), validateResult.getCachePath());
+        if (!generateResult.isSuccess()) {
             return false;
         }
 
         return true;
     },
-    test: async (options: any) => {
+    test: async (options: LoadArguments) => {
         let loadResult = await loadStep(options);
-        if (!loadResult._success) {
+        if (!loadResult.isSuccess()) {
             return false;
         }
 
-        let validateResult = await validateStep(loadResult._processors, loadResult._cache);
-        if (!validateResult._success) {
+        let validateResult = await validateStep(loadResult.getProcessors(), loadResult.getCachePath());
+        if (!validateResult.isSuccess()) {
             return false;
         }
 

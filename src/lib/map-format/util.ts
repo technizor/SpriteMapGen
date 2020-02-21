@@ -1,3 +1,4 @@
+
 const base64Table = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const debugGridStr = (grid: Array<Array<number>>) => grid
     .map(row => row
@@ -5,4 +6,4 @@ const debugGridStr = (grid: Array<Array<number>>) => grid
         .join(''))
     .join('\n');
 
-export default { debugGridStr };
+export { debugGridStr };

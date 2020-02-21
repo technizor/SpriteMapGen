@@ -4,103 +4,103 @@ import * as sharp from 'sharp';
 import mapFormat from './map-format';
 import { OptionsValue, IOValue, GridValue, BlockEntry, SpriteBlockEntry, MapBlockEntry, BlockBlockEntry } from './map-format/types';
 
-class Processor {
-    public _map: any;
-    public _cache: any;
-    public _stack: Array<any>;
-    constructor(map: any, cache: any, stack: Array<any> = []) {
-        if (!map) throw new Error("Map is required.");
-        if (!cache) throw new Error("Cache is required.");
+class Processor<T extends Processor<T>> {
+    private _mapPath: string;
+    private _cachePath: string;
+    private _stack: Array<T>;
+    constructor(mapPath: string, cachePath: string, stack: Array<T> = []) {
+        if (!mapPath) throw new Error("Map is required.");
+        if (!cachePath) throw new Error("Cache is required.");
         if (!stack) throw new Error("Stack is required.");
 
-        this._map = map;
-        this._cache = cache;
+        this._mapPath = mapPath;
+        this._cachePath = cachePath;
         this._stack = stack;
     }
+
+    getMapPath() { return this._mapPath; }
+    getCachePath() { return this._cachePath; }
+    getStack() { return this._stack; }
 }
 
-class BaseProcessor extends Processor {
-    constructor(map: any, cache: any, stack: Array<any>) {
-        super(map, cache, stack);
-    }
+class BaseProcessor extends Processor<BaseProcessor> {
+    constructor(mapPath: string, cachePath: string, stack: Array<BaseProcessor>) { super(mapPath, cachePath, stack); }
 
     async loadOptions(): Promise<ResolvedProcessor> {
-        let cachePath = path.resolve(this._cache);
-        let basePath = path.dirname(path.resolve(this._map));
+        let cachePath = path.resolve(this.getCachePath());
+        let basePath = path.dirname(path.resolve(this.getMapPath()));
 
-        let rawOptions = await fse.readJson(this._map);
-        let options = Object.assign({}, rawOptions, {
-            input: Object.assign({}, rawOptions.input, {
-                path: path.join(basePath, rawOptions.input.path),
-            }),
-            output: Object.assign({}, rawOptions.output, {
-                path: path.join(cachePath, rawOptions.output.path),
-            }),
-        });
+        let rawOptions = await fse.readJson(this.getMapPath()) as OptionsValue;
+        let options = Object.assign({}, rawOptions,  {
+            input: Object.assign({}, rawOptions.input, { path: path.join(basePath, rawOptions.input.path) }),
+            output: Object.assign({}, rawOptions.output, { path: path.join(cachePath, rawOptions.output.path) }),
+        }) as OptionsValue;
 
-        let stack = [];
-        for (let i = 0; i < options.blocks.length; i++) {
-            if (options.blocks[i].map !== undefined && options.blocks[i].map !== null) {
-                let src = path.join(options.input.path, options.blocks[i].map);
-                let subMap = new BaseProcessor(src, this._cache, []);
-                stack[i] = await subMap.loadOptions();
-            }
-        }
-        return new ResolvedProcessor(this._map, this._cache, stack, rawOptions, options);
+        let stack = await Promise.all<ResolvedProcessor>(options.blocks.filter(blk => (blk as MapBlockEntry).map)
+            .map(blk => blk as MapBlockEntry)
+            .map(blk => {
+                let src = path.join(options.input.path, blk.map);
+                let subMap = new BaseProcessor(src, this.getCachePath(), []);
+                return subMap.loadOptions();
+        }));
+        return new ResolvedProcessor(this.getMapPath(), this.getCachePath(), stack, rawOptions, options);
     }
 }
 
-class ResolvedProcessor extends Processor {
-    public _rawOptions: any;
-    public _options: any;
-    constructor(map: any, cache: any, stack: Array<any>, rawOptions: any, options: any) {
-        super(map, cache, stack);
+class ResolvedProcessor extends Processor<ResolvedProcessor> {
+    private _rawOptions: OptionsValue;
+    private _options: OptionsValue;
+    constructor(mapPath: string, cachePath: string, stack: Array<ResolvedProcessor>, rawOptions: OptionsValue, options: OptionsValue) {
+        super(mapPath, cachePath, stack);
         this._rawOptions = rawOptions;
         this._options = options;
     }
 
-    async validate() {
+    getRawOptions() { return this._rawOptions; }
+    getOptions() { return this._options; }
+
+    async validate(): Promise<ValidatedProcessor> {
         let result = mapFormat.test(this._options);
+
+        let stack = await Promise.all(this.getStack().map(p => p.validate()));
         if (!result.valid) {
-            console.log(`${this._map} is not valid:`, result.reason);
-            return new ValidatedProcessor(this._map, this._cache, this._stack, this._rawOptions, this._options, false, false);
-        }
-        let stack = [];
-        for (let i = 0; i < this._options.blocks.length; i++) {
-            if (this._options.blocks[i].map !== undefined && this._options.blocks[i].map !== null) {
-                stack[i] = await this._stack[i].validate();
-            }
+            console.log(`${this.getMapPath()} is not valid:`, result.reason);
+            return new ValidatedProcessor(this.getMapPath(), this.getCachePath(), stack, this.getRawOptions(), this.getOptions(), false, false);
         }
         console.log('Not Implemented: Testing File Existence');
-        return new ValidatedProcessor(this._map, this._cache, stack, this._rawOptions, this._options, true, true);
+        return new ValidatedProcessor(this.getMapPath(), this.getCachePath(), stack, this.getRawOptions(), this.getOptions(), true, true);
     }
 }
 
-class ValidatedProcessor extends ResolvedProcessor {
-    public _validOptions: any;
-    public _validFiles: any;
-    constructor(map: any, cache: any, stack: Array<any>, rawOptions: any, options: any, validOptions: any, validFiles: any) {
-        super(map, cache, stack, rawOptions, options);
+class ValidatedProcessor extends Processor<ValidatedProcessor> {
+    private _rawOptions: OptionsValue;
+    private _options: OptionsValue;
+    private _validOptions: boolean;
+    private _validFiles: boolean;
+    constructor(mapPath: string, cachePath: string, stack: Array<ValidatedProcessor>, rawOptions: OptionsValue, options: OptionsValue, validOptions: boolean, validFiles: boolean) {
+        super(mapPath, cachePath, stack);
+        this._rawOptions = rawOptions;
+        this._options = options;
         this._validOptions = validOptions;
         this._validFiles = validFiles;
     }
 
-    isValid() {
-        return this._validOptions && this._validFiles;
-    }
-    isOptionsValid() {
-        return this._validOptions;
-    }
-    isFilesValid() {
-        return this._validFiles;
-    }
+    getRawOptions() { return this._rawOptions; }
+    getOptions() { return this._options; }
+    isValid() { return this._validOptions && this._validFiles; }
+    isOptionsValid() { return this._validOptions; }
+    isFilesValid() { return this._validFiles; }
 
     async generate() {
         if (!this.isValid()) {
             console.log('Map is invalid. Cannot generate spritemap.');
             return;
         }
-        await generateImage(this._options, this._stack);
+        await generateImage(this._options, this.getStack());
+
+        let outputFile = `${this._options.output.path}.${this._options.output.format}`;
+        console.log(this.getMapPath(), '->', outputFile);
+        return outputFile;
     }
 }
 
@@ -109,7 +109,7 @@ interface BlockItemPositionFunc {
 }
 
 // Generator Functions
-async function generateImage(options: OptionsValue, stack: any) {
+async function generateImage(options: OptionsValue, stack: Array<ValidatedProcessor>) {
     let inputOptions = options.input;
     let gridOptions = options.grid;
     const width = gridOptions.sizeX * gridOptions.basisX;
@@ -155,7 +155,7 @@ async function getSpriteBuffer(inputOptions: IOValue, gridOptions: GridValue, bl
         }
     } else if ((blockOptions as MapBlockEntry).map) {
         await subMap.generate();
-        let subOutputOptions = subMap._options.output;
+        let subOutputOptions = subMap.getOptions().output;
         let subOutputPath = `${subOutputOptions.path}.${subOutputOptions.format}`;
         if (fse.existsSync(subOutputPath)) {
             return await sharp(subOutputPath)
