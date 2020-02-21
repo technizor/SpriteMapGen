@@ -18,7 +18,7 @@
     "sharp": "0.21.0"
   },
   "scripts": {
-    "prepublish": "tsc"
+    "prepare": "tsc"
   },
   "main": "dist/lib/procedure.js",
   "types": "dist/lib/procedure.d.ts",
