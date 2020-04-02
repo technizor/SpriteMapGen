@@ -2,7 +2,7 @@
 import procedure from './procedure';
 import hashFile from './util/hash-file';
 import reader from './map-format/reader';
-import { DepNode, makeDepTree, serializeDepTree } from './util/dep-tree';
+import { serializeDepTrees } from './util/dep-tree';
 import { OptionsValue } from './map-format/types';
 //import * as util from 'util';
 
@@ -34,14 +34,9 @@ switch (command) {
     case 'generate':
         procedure.generate(procedureData);
         break;
-    case 'hash-files':
-        Promise.all<string | null>(mapPaths.map(p => hashFile(p))).then(console.log);
-        break;
-    case 'dep':
-        Promise.all<DepNode<OptionsValue>>(mapPaths
-            .map(p => makeDepTree(p, reader('.spritemap-cache'), hashFile))
-        ).then(p => p.map((n: DepNode<OptionsValue>) => serializeDepTree(n))
-            .forEach(n => console.log(JSON.stringify(n, undefined, 2))));
+    case 'hash':
+        Promise.resolve(serializeDepTrees<OptionsValue>(mapPaths, reader('.spritemap-cache'), hashFile))
+            .then(n => console.log(JSON.stringify(n, undefined, 2)));
         break;
     default:
         console.log(helpStr);
