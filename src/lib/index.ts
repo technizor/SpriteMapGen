@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import procedure from './procedure';
 import hashFile from './util/hash-file';
+import mapFormat from './map-format';
 import reader from './map-format/reader';
 import { serializeDepTrees } from './util/dep-tree';
 import { OptionsValue } from './map-format/types';
@@ -21,6 +22,9 @@ let helpStr = `Usage: smg [option]... <command> [map]...
 [map]                        a file path to a map
 `;
 
+let readerFunc = reader(cachePath);
+let hashFunc = hashFile(true);
+
 switch (command) {
     case 'test':
         procedure.test(procedureData);
@@ -29,7 +33,7 @@ switch (command) {
         procedure.generate(procedureData);
         break;
     case 'hash':
-        Promise.resolve(serializeDepTrees<OptionsValue>(mapPaths, reader(cachePath), hashFile))
+        Promise.resolve(serializeDepTrees<OptionsValue>(mapPaths, readerFunc, hashFunc))
             .then(n => console.log(JSON.stringify(n, undefined, 2)));
         break;
     default:
