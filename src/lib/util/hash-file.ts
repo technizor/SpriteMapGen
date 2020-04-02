@@ -6,7 +6,7 @@ function hashFile(file: string) {
     return new Promise<string | null>((resolve, reject) => {
         let hash = crypto.createHash('sha256');
         if (!fse.existsSync(fp)) {
-            console.log('not exist', file);
+            console.error('File does not exist: ', file);
             resolve(null);
         }
         if (!fse.lstatSync(file as any).isFile) {

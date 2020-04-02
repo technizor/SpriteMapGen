@@ -30,7 +30,7 @@ export interface SerializableMapDepNode {
 
 export interface SerializableDependencyEntry {
     key: string;
-    value: SerializableMapDepNode;
+    value: SerializableDepNode;
 }
 
 export class DepNode<T> {
@@ -63,7 +63,7 @@ export class DepNode<T> {
     getData() { return this.data; }
 }
 
-async function makeDepTree<T>(filePath: string, dependencyDataFunc: DependencyDataFunc<T>, fileHashFunc: FileHashFunc): Promise<DepNode<T>> {
+export async function makeDepTree<T>(filePath: string, dependencyDataFunc: DependencyDataFunc<T>, fileHashFunc: FileHashFunc): Promise<DepNode<T>> {
     let fileHash = fileHashFunc(filePath);
     let depData = await dependencyDataFunc(filePath);
     let dirPath = path.dirname(filePath);
