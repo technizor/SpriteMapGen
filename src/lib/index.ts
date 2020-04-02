@@ -7,7 +7,8 @@ import { OptionsValue } from './map-format/types';
 
 let command = process.argv[2];
 let mapPaths = process.argv.splice(3);
-let procedureData = { mapPaths };
+let cachePath = '.spritemap-cache';
+let procedureData = { mapPaths, cachePath };
 
 let helpStr = `Usage: smg [option]... <command> [map]...
 [option]
@@ -28,7 +29,7 @@ switch (command) {
         procedure.generate(procedureData);
         break;
     case 'hash':
-        Promise.resolve(serializeDepTrees<OptionsValue>(mapPaths, reader('.spritemap-cache'), hashFile))
+        Promise.resolve(serializeDepTrees<OptionsValue>(mapPaths, reader(cachePath), hashFile))
             .then(n => console.log(JSON.stringify(n, undefined, 2)));
         break;
     default:
