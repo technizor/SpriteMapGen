@@ -33,7 +33,7 @@ switch (command) {
         procedure.generate(procedureData);
         break;
     case 'hash':
-        Promise.resolve(serializeDepTrees<OptionsValue>(mapPaths, readerFunc, hashFunc))
+        Promise.resolve(serializeDepTrees<OptionsValue>(mapPaths, mapFormat, readerFunc, hashFunc))
             .then(n => console.log(JSON.stringify(n, undefined, 2)));
         break;
     default:
