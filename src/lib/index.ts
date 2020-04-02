@@ -4,10 +4,7 @@ import hashFile from './util/hash-file';
 import reader from './map-format/reader';
 import { serializeDepTrees } from './util/dep-tree';
 import { OptionsValue } from './map-format/types';
-//import * as util from 'util';
 
-//let executable = process.argv[0];
-//let entry = process.argv[1];
 let command = process.argv[2];
 let mapPaths = process.argv.splice(3);
 let procedureData = { mapPaths };
@@ -17,15 +14,11 @@ let helpStr = `Usage: smg [option]... <command> [map]...
 
 <command>
   test                       validates format of each map
-  test-files                 checks for input files of each map
   generate                   generates the output of each map
-  hash-files                 hashes files
-  dep                        generates dep tree
+  hash                       generates dependency tree of each map
 
 [map]                        a file path to a map
 `;
-
-
 
 switch (command) {
     case 'test':
