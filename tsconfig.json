@@ -1,21 +1,13 @@
 {
-    "compilerOptions": {
-        "declaration": true,
-        "module": "commonjs",
-        "noImplicitReturns": true,
-        "noUnusedLocals": true,
-        "outDir": "dist",
-        "rootDir": "src",
-        "sourceMap": true,
-        "strict": true,
-        "target": "es2017"
-    },
+    "extends": "./tsconfig.base.json",
     "compileOnSave": true,
+    "compilerOptions": {
+        "module": "commonjs",
+        "outDir": "out",
+        "sourceRoot": "tests"
+    },
     "include": [
-        "**/*.ts"
-    ],
-    "types": [
-        "fs-extra",
-        "sharp"
+        "src/**/*.ts",
+        "tests/**/*.ts"
     ]
 }

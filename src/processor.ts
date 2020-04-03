@@ -1,8 +1,8 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as sharp from 'sharp';
-import mapFormat from './map-format';
-import { OptionsValue, IOValue, GridValue, BlockEntry, SpriteBlockEntry, MapBlockEntry, BlockBlockEntry } from './map-format/types';
+import mapFormat from 'src/map-format';
+import { OptionsValue, IOValue, GridValue, BlockEntry, SpriteBlockEntry, MapBlockEntry, BlockBlockEntry } from 'src/map-format/types';
 
 class Processor<T extends Processor<T>> {
     private _mapPath: string;

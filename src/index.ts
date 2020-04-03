@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import procedure from './procedure';
-import hashFile from './util/hash-file';
-import mapFormat from './map-format';
-import reader from './map-format/reader';
-import { serializeDepTrees } from './util/dep-tree';
-import { OptionsValue } from './map-format/types';
+import procedure from 'src/procedure';
+import hashFile from 'src/hash-file';
+import mapFormat from 'src/map-format';
+import reader from 'src/map-format/reader';
+import { serializeDepTrees } from 'src/dep-tree';
+import { OptionsValue } from 'src/map-format/types';
 
 let command = process.argv[2];
 let mapPaths = process.argv.splice(3);

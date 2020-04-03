@@ -1,5 +1,5 @@
-import { ValidationResult, IValidator, ValidateFunc, ValidationResultReason } from './types';
-import specFactory, { Spec, Obj } from './spec';
+import { ValidationResult, IValidator, ValidateFunc, ValidationResultReason } from 'src/validator/types';
+import specFactory, { Spec, Obj } from 'src/validator/spec';
 
 const indent = (str: string) => str.split('\n')
     .map(line => `  ${line}`)

@@ -1,7 +1,7 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
 
-import { DependencyDataOutput, DependencyDataFunc } from '../util/dep-tree';
+import { DependencyDataOutput, DependencyDataFunc } from '../dep-tree';
 import { OptionsValue, SpriteBlockEntry, MapBlockEntry, BlockBlockEntry } from './types';
 
 export default function getReaderFunction(cachePath: string): DependencyDataFunc<OptionsValue> {

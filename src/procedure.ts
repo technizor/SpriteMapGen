@@ -1,6 +1,6 @@
 import * as fse from 'fs-extra';
-import BaseProcessor, {Processor, ResolvedProcessor, ValidatedProcessor} from './processor';
-import mapFormat from './map-format';
+import BaseProcessor, {Processor, ResolvedProcessor, ValidatedProcessor} from 'src/processor';
+import mapFormat from 'src/map-format';
 
 class StepResult<T extends Processor<T>> {
     private _success: boolean;

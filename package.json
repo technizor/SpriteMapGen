@@ -18,11 +18,20 @@
     "sharp": "0.21.0"
   },
   "scripts": {
-    "prepare": "tsc"
+    "prepare": "tsc --build tsconfig.cjs.json",
+    "test": "mocha -r ts-node/register tests/**/*.test.ts",
+    "coverage": "nyc -r lcov -e .ts -x \"*.test.ts\" npm run test"
   },
-  "main": "dist/lib/procedure.js",
-  "types": "dist/lib/procedure.d.ts",
+  "main": "dist/procedure.js",
+  "types": "dist/procedure.d.ts",
   "bin": {
-    "smg": "dist/lib/index.js"
+    "smg": "dist/index.js"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^7.1.1",
+    "nyc": "^15.0.0",
+    "ts-node": "^8.8.1",
+    "typescript": "^3.8.3"
   }
 }

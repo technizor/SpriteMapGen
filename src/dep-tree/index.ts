@@ -1,8 +1,7 @@
 import * as path from 'path';
-import {ObjectValidator} from '../validator';
+import {ObjectValidator} from 'src/validator';
 
 export type FileHash = string | null;
-
 
 export interface DependencyDataOutput<T> {
     dependencies: Array<string>;
