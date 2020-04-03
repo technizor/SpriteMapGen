@@ -87,3 +87,4 @@ $RECYCLE.BIN/
 .spritemap-cache
 dist
 out
+.nyc_output
