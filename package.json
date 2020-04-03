@@ -20,7 +20,7 @@
   "scripts": {
     "prepare": "tsc -b tsconfig.cjs.json",
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
-    "coverage": "nyc -r lcov -e .ts -x \"*.spec.ts\" npm run test"
+    "coverage": "nyc -r lcov -e .ts -x \"**/*.spec.ts\" npm run test"
   },
   "main": "dist/procedure.js",
   "types": "dist/procedure.d.ts",
