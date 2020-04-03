@@ -3,11 +3,8 @@
     "compileOnSave": true,
     "compilerOptions": {
         "module": "commonjs",
-        "outDir": "out",
-        "sourceRoot": "tests"
+        "outDir": "dist",
     },
-    "include": [
-        "src/**/*.ts",
-        "tests/**/*.ts"
-    ]
+    "types": ["mocha", "chai"],
+    "include": ["src/**/*.ts"]
 }

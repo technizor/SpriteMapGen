@@ -6,12 +6,7 @@
         "noUnusedLocals": true,
         "sourceMap": true,
         "strict": true,
-        "target": "es2017",
-        "baseUrl": "./",
-        "paths": {
-            "src/*": ["src/*"],
-            "tests/*": ["tests/*"]
-        }
+        "target": "es2017"
     },
     "types": [
         "fs-extra",

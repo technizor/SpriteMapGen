@@ -1,4 +1,4 @@
-import { IValidator, ValidationResult, ValidateFunc } from 'src/validator/types';
+import { IValidator, ValidationResult, ValidateFunc } from './types';
 
 type SpecType = 'type' | 'value' | 'enum' | 'prop' | 'entry' | 'case' | 'custom';
 

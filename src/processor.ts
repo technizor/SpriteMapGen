@@ -1,8 +1,8 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as sharp from 'sharp';
-import mapFormat from 'src/map-format';
-import { OptionsValue, IOValue, GridValue, BlockEntry, SpriteBlockEntry, MapBlockEntry, BlockBlockEntry } from 'src/map-format/types';
+import mapFormat from './map-format';
+import { OptionsValue, IOValue, GridValue, BlockEntry, SpriteBlockEntry, MapBlockEntry, BlockBlockEntry } from './map-format/types';
 
 class Processor<T extends Processor<T>> {
     private _mapPath: string;
@@ -31,7 +31,7 @@ class BaseProcessor extends Processor<BaseProcessor> {
         let basePath = path.dirname(path.resolve(this.getMapPath()));
 
         let rawOptions = await fse.readJson(this.getMapPath()) as OptionsValue;
-        let options = Object.assign({}, rawOptions,  {
+        let options = Object.assign({}, rawOptions, {
             input: Object.assign({}, rawOptions.input, { path: path.join(basePath, rawOptions.input.path) }),
             output: Object.assign({}, rawOptions.output, { path: path.join(cachePath, rawOptions.output.path) }),
         }) as OptionsValue;
@@ -42,7 +42,7 @@ class BaseProcessor extends Processor<BaseProcessor> {
                 let src = path.join(options.input.path, blk.map);
                 let subMap = new BaseProcessor(src, this.getCachePath(), []);
                 return subMap.loadOptions();
-        }));
+            }));
         return new ResolvedProcessor(this.getMapPath(), this.getCachePath(), stack, rawOptions, options);
     }
 }

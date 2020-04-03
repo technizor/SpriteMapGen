@@ -1,5 +1,5 @@
 import * as path from 'path';
-import {ObjectValidator} from 'src/validator';
+import { ObjectValidator } from '../validator';
 
 export type FileHash = string | null;
 
@@ -89,7 +89,8 @@ export async function makeDepTree<T>(filePath: string, validator: ObjectValidato
         let rfp = path.relative(dirPath, fp);
         let entry: DependencyEntry<T> = {
             key: rfp,
-            value: await makeDepTree(fp, validator, dependencyDataFunc, fileHashFunc) };
+            value: await makeDepTree(fp, validator, dependencyDataFunc, fileHashFunc)
+        };
         return entry;
     }));
     entries.forEach(entry => {
