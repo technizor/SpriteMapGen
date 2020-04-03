@@ -9,10 +9,13 @@ export default function getHashFile(quiet: boolean = false) {
             if (!fse.existsSync(fp)) {
                 if (!quiet) console.error('File does not exist: ', file);
                 resolve(null);
+                return;
             }
-            if (!fse.lstatSync(file as any).isFile) {
+            let lstat = fse.lstatSync(file as any);
+            if (!lstat.isFile()) {
                 if (!quiet) console.error('Path is not a file: ', file);
                 resolve(null);
+                return;
             }
             let fileStream = new fse.ReadStream(file as any);
             fileStream.on('data', data => {
