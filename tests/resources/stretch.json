@@ -1,0 +1,42 @@
+{
+    "input": {
+        "path": "img/",
+        "format": "png"
+    },
+    "output": {
+        "path": "stretch",
+        "format": "png"
+    },
+    "grid": {
+        "basisX": 16,
+        "basisY": 16,
+        "sizeX": 3,
+        "sizeY": 3
+    },
+    "blocks": [
+        {
+            "x": 0,
+            "y": 0,
+            "sizeX": 2,
+            "sizeY": 2,
+            "src": "stretch"
+        },
+        {
+            "x": 0,
+            "y": 2,
+            "sizeX": 2,
+            "src": "stretch"
+        },
+        {
+            "x": 2,
+            "y": 0,
+            "sizeY": 2,
+            "src": "stretch"
+        },
+        {
+            "x": 2,
+            "y": 2,
+            "src": "stretch"
+        }
+    ]
+}
